@@ -95,7 +95,7 @@ fu! bufferhint#Popup()
     " exe 'silent! ' . s:Width . 'vne ' . s:MyName
     exe 'silent! ' . 'botright 's:LineCount.'sp ' . s:MyName
 
-    setlocal noshowcmd
+    " setlocal noshowcmd    "showcmd is a global option
     setlocal noswapfile
     setlocal buftype=nofile
     setlocal bufhidden=wipe
@@ -128,7 +128,10 @@ fu! bufferhint#Popup()
     " set content
     setlocal modifiable
     put! = bufcontent
-    exec "$delete"
+    " exec "$delete"
+    " delete last blank line into 'black hole register'
+    exec "normal G"
+    exec 'normal "_dd'
     call s:DrawHints()
     setlocal nomodifiable
 
