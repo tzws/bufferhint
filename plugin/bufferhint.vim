@@ -74,10 +74,10 @@ fu! bufferhint#Popup()
         let g:bufferhint_MaxWidth = winwidth(0)
     endif
 
-    if empty(s:HintKeys) || s:Height != winheight(0)
-        call s:GenHintKeys()
-        let s:Height = winheight(0)
-    endif
+    " if empty(s:HintKeys) || s:Height != winheight(0)
+        " call s:GenHintKeys()
+        " let s:Height = winheight(0)
+    " endif
 
     call s:UpdateLRU()
 
@@ -88,9 +88,12 @@ fu! bufferhint#Popup()
     if empty(bufcontent)
         return
     endif
+
+    call s:GenHintKeys()
     
     " create buffer
-    exe 'silent! ' . s:Width . 'vne ' . s:MyName
+    " exe 'silent! ' . s:Width . 'vne ' . s:MyName
+    exe 'silent! ' . 'botright 's:LineCount.'sp ' . s:MyName
 
     setlocal noshowcmd
     setlocal noswapfile
@@ -112,12 +115,12 @@ fu! bufferhint#Popup()
         sy match AtHint /@/
         if !get(g:, 'bufferhint_CustomHighlight', '')
             hi clear KeyHint
-            hi def AtHint ctermfg=red
+            hi def AtHint ctermfg=red guifg=red
             let mode = g:bufferhint_SortMode
             if mode == 0
-                hi def KeyHint ctermfg=yellow
+                hi def KeyHint ctermfg=3 guifg=yellow
             elseif mode == 1
-                hi def KeyHint ctermfg=green
+                hi def KeyHint ctermfg=green guifg=green
             endif
         endif
     endif
@@ -125,10 +128,16 @@ fu! bufferhint#Popup()
     " set content
     setlocal modifiable
     put! = bufcontent
+    exec "$delete"
+    call s:DrawHints()
     setlocal nomodifiable
 
+    call s:UnmapAllKeys()
+
     " map keys for explorer
-    map <silent> <buffer> q :bwipeout<CR> 
+    map <silent> <buffer> <ESC> :call bufferhint#Popup()<cr>
+    map <silent> <buffer> q :call bufferhint#Popup()<cr>
+    " map <silent> <buffer> q :bwipeout<CR> 
     map <silent> <buffer> <space> :call bufferhint#SwitchMode()<CR>
 
     " map keys for buffer
@@ -137,18 +146,18 @@ fu! bufferhint#Popup()
     map <silent> <buffer> dd :call bufferhint#KillByCursor()<CR>
 
     " map keys for movement
-    map <silent> <buffer> j :call bufferhint#Scroll("down")<CR>
-    map <silent> <buffer> k :call bufferhint#Scroll("up")<CR>
-    map <silent> <buffer> gg :call bufferhint#Scroll("top")<CR>
-    map <silent> <buffer> G :call bufferhint#Scroll("bottom")<CR>
-    map <silent> <buffer> <PageUp> :call bufferhint#Scroll("pgup")<CR>
-    map <silent> <buffer> <PageDown> :call bufferhint#Scroll("pgdn")<CR>
-    map <silent> <buffer> <C-b> :call bufferhint#Scroll("pgup")<CR>
-    map <silent> <buffer> <C-f> :call bufferhint#Scroll("pgdn")<CR>
-    map <silent> <buffer> <Down> j
-    map <silent> <buffer> <Up> k
-    map <silent> <buffer> <Home> gg
-    map <silent> <buffer> <End> G
+    " map <silent> <buffer> j :call bufferhint#Scroll("down")<CR>
+    " map <silent> <buffer> k :call bufferhint#Scroll("up")<CR>
+    " map <silent> <buffer> gg :call bufferhint#Scroll("top")<CR>
+    " map <silent> <buffer> G :call bufferhint#Scroll("bottom")<CR>
+    " map <silent> <buffer> <PageUp> :call bufferhint#Scroll("pgup")<CR>
+    " map <silent> <buffer> <PageDown> :call bufferhint#Scroll("pgdn")<CR>
+    " map <silent> <buffer> <C-b> :call bufferhint#Scroll("pgup")<CR>
+    " map <silent> <buffer> <C-f> :call bufferhint#Scroll("pgdn")<CR>
+    " map <silent> <buffer> <Down> j
+    " map <silent> <buffer> <Up> k
+    " map <silent> <buffer> <Home> gg
+    " map <silent> <buffer> <End> G
 
     map <buffer> <Left> <Nop>
     map <buffer> <Right> <Nop>
@@ -157,8 +166,9 @@ fu! bufferhint#Popup()
     map <buffer> O <Nop>
 
     " NOTE: These hooks should be work only for this buffer!!!
-    autocmd! VimResized <buffer> call s:OnResized()
-    autocmd! CursorMoved <buffer> call s:OnCursorMoved()
+    " autocmd! VimResized <buffer> call s:OnResized()
+    " autocmd! CursorMoved <buffer> call s:OnCursorMoved()
+    autocmd! CursorMoved <buffer> call cursor(line('.'), 7)
 
     call s:ModeReady()
 endfu
@@ -217,25 +227,35 @@ fu! s:GetContent()
 endfu
 
 fu! s:GenHintKeys()
-    let hint1 = "abcefhilmoprstuvwxyz"
+    let hint1 = "abefhilmoprstuvwxyz"
     let hint2 = "abcdefghijklmnopqrstuvwxyz"
 
-    let nhint1 = (strlen(hint1)*strlen(hint2) - winheight(0)) / (strlen(hint2)-1)
+    let nhint1 = strlen(hint1)
     let nhint2 = strlen(hint2)
     let ihint1 = nhint1
-    let ihint2 = 0
+    let ihint2 = nhint2
     let hintkeys = {}
 
-    for idx in range(0, winheight(0)-1)
-        " build hint key and map it
+    for idx in range(0, s:LineCount-1)
         if idx < nhint1
             let hint = hint1[idx]
         else
-            let hint = hint1[ihint1] . hint2[ihint2]
+            if ihint1 == 0
+                let hint = ';'.idx 
+            else
             let ihint2 = ihint2 + 1
             if ihint2 >= nhint2
                 let ihint2 = 0
-                let ihint1 = ihint1 + 1
+                    let ihint1 = ihint1 - 1
+
+                    " remove the single char hint
+                    let hint = hint1[ihint1] . hint2[ihint2]
+                    let hintkeys[hint] = hintkeys[hint1[ihint1]]
+                    call remove(hintkeys, hint1[ihint1])
+
+                    let ihint2 = ihint2 + 1
+                endif
+                let hint = hint1[ihint1] . hint2[ihint2]
             endif
         endif
         let hintkeys[hint] = idx
@@ -266,14 +286,13 @@ fu! s:DrawHints()
     endif
     setlocal modifiable
     for hint in keys(hintkeys)
-        let row = line("w0") + hintkeys[hint]
+        " let row = line("w0") + hintkeys[hint]
+        let row = hintkeys[hint] + 1
         if row > s:LineCount
             continue
         endif
-        if strlen(hint) < 2
-            let hint = hint . " "
-        endif
-        let str = hint . strpart(getline(row), 2)
+        let hint = hint . repeat(" ", 6 - strlen(hint))
+        let str = hint . getline(row)
         call setline(row, str)
     endfor
     setlocal nomodifiable
@@ -369,7 +388,7 @@ fu! s:SortedByPath()
         call add(pathbids, bid)
 
         " add newline, reserve 4 spaces for hint key
-        let content = content . "    " . line . "\n"
+        let content = content . line . "\n"
         let nline = nline + 1
     endfor
 
@@ -409,7 +428,7 @@ fu! s:SortedByLRU()
         if empty(line) | continue | endif
 
         " add newline, reserve 4 spaces for hint key
-        let content = content . "    " . line . "\n"
+        let content = content . line . "\n"
         let nline = nline + 1
     endfor
 
@@ -497,7 +516,8 @@ fu! bufferhint#LoadByHint(hint)
         echo "No such key: " . a:hint
         return
     endif
-    let idx = line("w0") + hintkeys[a:hint] - 1
+    " let idx = line("w0") + hintkeys[a:hint] - 1
+    let idx = hintkeys[a:hint]
     call s:LoadByIndex(idx)
 endfu
 
@@ -549,7 +569,8 @@ fu! bufferhint#KillByHint(hint)
         echo "No such key: " . a:hint
         return
     endif
-    let idx = line("w0") + hintkeys[a:hint] - 1
+    " let idx = line("w0") + hintkeys[a:hint] - 1
+    let idx = hintkeys[a:hint]
     call s:KillByIndex(idx)
 endfu
 
@@ -740,3 +761,9 @@ fu! s:RelativeFilePath(bname)
     return relpath
 endfu
 
+fu! s:UnmapAllKeys()
+    let hint1 = "abcefhilmoprstuvwxyz"
+    for idx in range(0, len(hint1)-1)
+        execute 'map <buffer> '.hint1[idx].' <Nop>'
+    endfor
+endfu
