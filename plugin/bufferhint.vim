@@ -172,6 +172,7 @@ fu! bufferhint#Popup()
     " autocmd! VimResized <buffer> call s:OnResized()
     " autocmd! CursorMoved <buffer> call s:OnCursorMoved()
     autocmd! CursorMoved <buffer> call cursor(line('.'), 7)
+    autocmd! BufLeave <buffer> call bufferhint#Popup()
 
     call s:ModeReady()
 endfu
@@ -313,14 +314,18 @@ fu! s:FormatPath(bid, path)
     endif
 
     " adapt the length of path
-    let len = strlen(path) + s:ReservedSpace
-    if len > maxw
-        let path = '...' . strpart(path, len - maxw + 3)
-    "elseif len < maxw
-    "    if (bufwinnr(bid) == -1)
-    "        let path = path . repeat(' ', maxw - len)
-    "    endif
-    endif
+    " let len = strlen(path) + s:ReservedSpace
+    " if len > maxw
+        " let path = '...' . strpart(path, len - maxw + 3)
+    " "elseif len < maxw
+    " "    if (bufwinnr(bid) == -1)
+    " "        let path = path . repeat(' ', maxw - len)
+    " "    endif
+    " endif
+
+    let filename = fnamemodify(path, ":t")
+    let filedir = fnamemodify(path, ":h")
+    let path = filename
 
     let path = path . ' '
     " buffer stats hint
@@ -330,6 +335,8 @@ fu! s:FormatPath(bid, path)
     if getbufvar(bid, '&modified')
         let path = path . '~'
     endif
+
+    let path = path.'  --  '.filedir
 
     return path
 endfu
@@ -759,8 +766,9 @@ fu! s:RelativeFilePath(bname)
         return "#" . a:bname . "#"
     endif
     let fullpath = fnamemodify(a:bname, ":p") 
-    let workpath = fnamemodify(getcwd(), ":p") 
-    let relpath = strpart(fullpath, strlen(matchstr(fullpath, workpath, 0)))
+    " let workpath = fnamemodify(getcwd(), ":p") 
+    " let relpath = strpart(fullpath, strlen(matchstr(fullpath, workpath, 0)))
+    let relpath = fullpath
     return relpath
 endfu
 
