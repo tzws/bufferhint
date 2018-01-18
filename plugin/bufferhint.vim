@@ -113,9 +113,14 @@ fu! bufferhint#Popup()
         sy clear
         sy match KeyHint /^../
         sy match AtHint /@/
+        sy match PreviousBufferHint /#/
+        sy match FileName /\v   [^ ]+ /
         if !get(g:, 'bufferhint_CustomHighlight', '')
             hi clear KeyHint
             hi def AtHint ctermfg=red guifg=red
+            hi def AtHint ctermfg=red guifg=red
+            hi def PreviousBufferHint ctermfg=red guifg=red
+            hi def FileName ctermfg=cyan guifg=cyan
             let mode = g:bufferhint_SortMode
             if mode == 0
                 hi def KeyHint ctermfg=3 guifg=yellow
@@ -336,6 +341,10 @@ fu! s:FormatPath(bid, path)
         let path = path . '~'
     endif
 
+    if bufnr('#') == bid
+        " previous buffer
+        let path = path . '#'
+    endif
     let path = path.'  --  '.filedir
 
     return path
