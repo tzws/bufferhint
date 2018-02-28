@@ -120,12 +120,13 @@ fu! bufferhint#Popup()
             hi def AtHint ctermfg=red guifg=red
             hi def AtHint ctermfg=red guifg=red
             hi def PreviousBufferHint ctermfg=red guifg=red
-            hi def FileName ctermfg=cyan guifg=cyan
+            hi def FileName ctermfg=cyan guifg=green
             let mode = g:bufferhint_SortMode
             if mode == 0
                 hi def KeyHint ctermfg=3 guifg=yellow
             elseif mode == 1
-                hi def KeyHint ctermfg=green guifg=green
+                hi def KeyHint ctermfg=3 guifg=yellow
+                " hi def KeyHint ctermfg=green guifg=green
             endif
         endif
     endif
@@ -351,6 +352,10 @@ fu! s:FormatPath(bid, path)
 endfu
 
 fu! s:IsBadTypeBuffer(bid)
+    " ignore current file
+    " if bufwinnr(a:bid) != -1
+        " return v:true
+    " endif
     let badtypes = ['help', 'quickfix']
     let buftype = getbufvar(a:bid, '&buftype')
     return index(badtypes, buftype) >= 0
@@ -513,10 +518,9 @@ endfu
 
 fu! s:Goto(line)
     let nline = s:LineCount
-    if nline < 1 | return | endif
+    if nline <= 1 | return | endif
 
-    let xoff = 4
-    setlocal modifiable
+    let xoff = 7
     if a:line < 1
         call cursor(1, xoff)
     elseif a:line > nline
@@ -524,7 +528,6 @@ fu! s:Goto(line)
     else
         call cursor(a:line, xoff)
     endif
-    setlocal nomodifiable
 endfu
 
 "--------------------------------------------
