@@ -67,7 +67,7 @@ let s:MyName = fnameescape(g:bufferhint_BufferName)
 fu! bufferhint#Popup()
     if bufloaded(bufnr(s:MyName))
         exe 'bwipeout ' . bufnr(s:MyName)
-        unmap q
+        " unmap q
         return
     endif
 
