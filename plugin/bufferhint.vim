@@ -67,6 +67,7 @@ let s:MyName = fnameescape(g:bufferhint_BufferName)
 fu! bufferhint#Popup()
     if bufloaded(bufnr(s:MyName))
         exe 'bwipeout ' . bufnr(s:MyName)
+        unmap q
         return
     endif
 
@@ -81,7 +82,7 @@ fu! bufferhint#Popup()
 
     call s:UpdateLRU()
 
-    " FIXME: 
+    " FIXME:
     " SetupWidth() is implicitly called inside GetContent()
     " this is not good
     let bufcontent = s:GetContent()
@@ -90,7 +91,7 @@ fu! bufferhint#Popup()
     endif
 
     call s:GenHintKeys()
-    
+
     " create buffer
     " exe 'silent! ' . s:Width . 'vne ' . s:MyName
     exe 'silent! ' . 'botright 's:LineCount.'sp ' . s:MyName
@@ -146,7 +147,7 @@ fu! bufferhint#Popup()
     " map keys for explorer
     map <silent> <buffer> <ESC> :call bufferhint#Popup()<cr>
     map <silent> <buffer> q :call bufferhint#Popup()<cr>
-    " map <silent> <buffer> q :bwipeout<CR> 
+    " map <silent> <buffer> q :bwipeout<CR>
     map <silent> <buffer> <space> :call bufferhint#SwitchMode()<CR>
 
     " map keys for buffer
@@ -251,7 +252,7 @@ fu! s:GenHintKeys()
             let hint = hint1[idx]
         else
             if ihint1 == 0
-                let hint = ';'.idx 
+                let hint = ';'.idx
             else
             let ihint2 = ihint2 + 1
             if ihint2 >= nhint2
@@ -398,7 +399,7 @@ fu! s:SortedByPath()
     endif
 
     call s:SetupWidth(maxpath)
-    
+
     " iterate through the buffers
     let nline = 0
     for key in sort(keys(pathidmap))
@@ -482,7 +483,7 @@ fu! s:UpdateLRU()
     endif
     " track new buffers
     for bid in bids
-        if buflisted(bid) 
+        if buflisted(bid)
             \&& !s:IsBadTypeBuffer(bid)
             \&& index(lrulst, bid) < 0
             call insert(lrulst, bid, 0)
@@ -638,7 +639,7 @@ fu! bufferhint#BufferKill(bang, buffer)
 					break
 				endif
 			endif
-			let l:index = l:index - 1	
+			let l:index = l:index - 1
 		endwhile
 	endif
 	if l:switch == 0	" check scratch buffers
@@ -765,7 +766,7 @@ fu! s:GetLRUFiles()
     for bid in bids
         if !buflisted(bid) | continue | endif
         let path = bufname(bid)
-        let files .= path . " " 
+        let files .= path . " "
     endfor
 
     return l:files
@@ -777,8 +778,8 @@ fu! s:RelativeFilePath(bname)
     if !filereadable(a:bname)
         return "#" . a:bname . "#"
     endif
-    let fullpath = fnamemodify(a:bname, ":p") 
-    " let workpath = fnamemodify(getcwd(), ":p") 
+    let fullpath = fnamemodify(a:bname, ":p")
+    " let workpath = fnamemodify(getcwd(), ":p")
     " let relpath = strpart(fullpath, strlen(matchstr(fullpath, workpath, 0)))
     let relpath = fullpath
     return relpath
