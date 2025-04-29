@@ -67,7 +67,6 @@ let s:MyName = fnameescape(g:bufferhint_BufferName)
 fu! bufferhint#Popup()
     if bufloaded(bufnr(s:MyName))
         exe 'bwipeout ' . bufnr(s:MyName)
-        " unmap q
         return
     endif
 
@@ -76,8 +75,8 @@ fu! bufferhint#Popup()
     endif
 
     " if empty(s:HintKeys) || s:Height != winheight(0)
-        " call s:GenHintKeys()
-        " let s:Height = winheight(0)
+    "     call s:GenHintKeys()
+    "     let s:Height = winheight(0)
     " endif
 
     call s:UpdateLRU()
@@ -93,8 +92,8 @@ fu! bufferhint#Popup()
     call s:GenHintKeys()
 
     " create buffer
-    " exe 'silent! ' . s:Width . 'vne ' . s:MyName
-    exe 'silent! ' . 'botright 's:LineCount.'sp ' . s:MyName
+    exe 'silent! ' . s:Width . 'vne ' . s:MyName
+    " exe 'silent! ' . 'botright 's:LineCount.'sp ' . s:MyName
 
     " setlocal noshowcmd    "showcmd is a global option
     setlocal noswapfile
@@ -105,9 +104,9 @@ fu! bufferhint#Popup()
     setlocal nowrap
     setlocal nonumber
     setlocal filetype=bufferhint
-	if has('patch-7.4.2210')
-		setlocal signcolumn=no
-	endif
+    if has('patch-7.4.2210')
+        setlocal signcolumn=no
+    endif
 
     " syntax highlighting
     if has("syntax")
@@ -323,7 +322,7 @@ fu! s:FormatPath(bid, path)
     " adapt the length of path
     " let len = strlen(path) + s:ReservedSpace
     " if len > maxw
-        " let path = '...' . strpart(path, len - maxw + 3)
+    "     let path = '...' . strpart(path, len - maxw + 3)
     " "elseif len < maxw
     " "    if (bufwinnr(bid) == -1)
     " "        let path = path . repeat(' ', maxw - len)
@@ -494,7 +493,7 @@ endfu
 fu! s:SetupWidth(pathlen)
     " decide max window width
     let width = a:pathlen + s:ReservedSpace
-    if width > g:bufferhint_MaxWidth
+    if (width > g:bufferhint_MaxWidth)
         let width = g:bufferhint_MaxWidth
     endif
     let s:Width = width
@@ -603,86 +602,86 @@ fu! bufferhint#KillByCursor()
 endfu
 
 fu! bufferhint#BufferKill(bang, buffer)
-	let l:bufcount = bufnr('$')
-	let l:switch = 0 	" window which contains target buffer will be switched
-	if empty(a:buffer)
-		let l:target = bufnr('%')
-	elseif a:buffer =~ '^\d\+$'
-		let l:target = bufnr(str2nr(a:buffer))
-	else
-		let l:target = bufnr(a:buffer)
-	endif
-	if l:target <= 0
-		echohl ErrorMsg
-		echomsg "cannot find buffer: '" . a:buffer . "'"
-		echohl NONE
-		return 0
-	endif
-	if empty(a:bang) && getbufvar(l:target, '&modified')
-		echohl ErrorMsg
-		echomsg "No write since last change (use :BufferKill!)"
-		echohl NONE
-		return 0
-	endif
-	if bufnr('#') > 0	" check alternative buffer
-		let l:aid = bufnr('#')
-		if l:aid != l:target && buflisted(l:aid) && getbufvar(l:aid, "&modifiable")
-			let l:switch = l:aid	" switch to alternative buffer
-		endif
-	endif
-	if l:switch == 0	" check non-scratch buffers
-		let l:index = l:bufcount
-		while l:index >= 0
-			if buflisted(l:index) && getbufvar(l:index, "&modifiable")
-				if strlen(bufname(l:index)) > 0 && l:index != l:target
-					let l:switch = l:index	" switch to that buffer
-					break
-				endif
-			endif
-			let l:index = l:index - 1
-		endwhile
-	endif
-	if l:switch == 0	" check scratch buffers
-		let l:index = l:bufcount
-		while l:index >= 0
-			if buflisted(l:index) && getbufvar(l:index, "&modifiable")
-				if l:index != l:target
-					let l:switch = l:index	" switch to a scratch
-					break
-				endif
-			endif
-			let l:index = l:index - 1
-		endwhile
-	endif
-	if l:switch  == 0	" check if only one scratch left
-		if strlen(bufname(l:target)) == 0 && (!getbufvar(l:target, "&modified"))
-			echo "This is the last scratch"
-			return 0
-		endif
-	endif
-	let l:ntabs = tabpagenr('$')
-	let l:tabcc = tabpagenr()
-	let l:wincc = winnr()
-	let l:index = 1
-	while l:index <= l:ntabs
-		exec 'tabn '.l:index
-		while 1
-			let l:wid = bufwinnr(l:target)
-			if l:wid <= 0 | break | endif
-			exec l:wid.'wincmd w'
-			if l:switch == 0
-				exec 'enew!'
-				let l:switch = bufnr('%')
-			else
-				exec 'buffer '.l:switch
-			endif
-		endwhile
-		let l:index += 1
-	endwhile
-	exec 'tabn ' . l:tabcc
-	exec l:wincc . 'wincmd w'
-	exec 'bdelete! '.l:target
-	return 1
+    let l:bufcount = bufnr('$')
+    let l:switch = 0     " window which contains target buffer will be switched
+    if empty(a:buffer)
+        let l:target = bufnr('%')
+    elseif a:buffer =~ '^\d\+$'
+        let l:target = bufnr(str2nr(a:buffer))
+    else
+        let l:target = bufnr(a:buffer)
+    endif
+    if l:target <= 0
+        echohl ErrorMsg
+        echomsg "cannot find buffer: '" . a:buffer . "'"
+        echohl NONE
+        return 0
+    endif
+    if empty(a:bang) && getbufvar(l:target, '&modified')
+        echohl ErrorMsg
+        echomsg "No write since last change (use :BufferKill!)"
+        echohl NONE
+        return 0
+    endif
+    if bufnr('#') > 0    " check alternative buffer
+        let l:aid = bufnr('#')
+        if l:aid != l:target && buflisted(l:aid) && getbufvar(l:aid, "&modifiable")
+            let l:switch = l:aid    " switch to alternative buffer
+        endif
+    endif
+    if l:switch == 0    " check non-scratch buffers
+        let l:index = l:bufcount
+        while l:index >= 0
+            if buflisted(l:index) && getbufvar(l:index, "&modifiable")
+                if strlen(bufname(l:index)) > 0 && l:index != l:target
+                    let l:switch = l:index    " switch to that buffer
+                    break
+                endif
+            endif
+            let l:index = l:index - 1
+        endwhile
+    endif
+    if l:switch == 0    " check scratch buffers
+        let l:index = l:bufcount
+        while l:index >= 0
+            if buflisted(l:index) && getbufvar(l:index, "&modifiable")
+                if l:index != l:target
+                    let l:switch = l:index    " switch to a scratch
+                    break
+                endif
+            endif
+            let l:index = l:index - 1
+        endwhile
+    endif
+    if l:switch  == 0    " check if only one scratch left
+        if strlen(bufname(l:target)) == 0 && (!getbufvar(l:target, "&modified"))
+            echo "This is the last scratch"
+            return 0
+        endif
+    endif
+    let l:ntabs = tabpagenr('$')
+    let l:tabcc = tabpagenr()
+    let l:wincc = winnr()
+    let l:index = 1
+    while l:index <= l:ntabs
+        exec 'tabn '.l:index
+        while 1
+            let l:wid = bufwinnr(l:target)
+            if l:wid <= 0 | break | endif
+            exec l:wid.'wincmd w'
+            if l:switch == 0
+                exec 'enew!'
+                let l:switch = bufnr('%')
+            else
+                exec 'buffer '.l:switch
+            endif
+        endwhile
+        let l:index += 1
+    endwhile
+    exec 'tabn ' . l:tabcc
+    exec l:wincc . 'wincmd w'
+    exec 'bdelete! '.l:target
+    return 1
 endfu
 
 fu! s:KillByIndex(idx)
@@ -695,25 +694,28 @@ fu! s:KillByIndex(idx)
 
     bwipeout
 
-	if getbufvar(bid, '&modified')
-		echohl ErrorMsg
-		echomsg "No write since last change"
-		echohl NONE
-		return
-	endif
+    if getbufvar(bid, '&modified')
+        echohl ErrorMsg
+        echomsg "No write since last change"
+        echohl NONE
+        return
+    endif
 
     " kill buffer
-	if !g:bufferhint_KeepWindow
-    	exe "silent bdelete! " . bid
-	else
-		call bufferhint#BufferKill('!', bid)
-	endif
+    if !g:bufferhint_KeepWindow
+        exe "silent bdelete! " . bid
+    else
+        call bufferhint#BufferKill('!', bid)
+    endif
 
     call remove(bids, a:idx)
 
     " update LRU
     let lruidx = index(s:LRUBids, bid)
-    call remove(s:LRUBids, lruidx)
+    " call remove(s:LRUBids, lruidx)
+    if lruidx > 0
+        call remove(s:LRUBids, lruidx)
+    endif
 
     call bufferhint#Popup()
 endfu
